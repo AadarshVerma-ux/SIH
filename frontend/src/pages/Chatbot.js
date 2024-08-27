@@ -1,46 +1,84 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function Chatbot() {
-  const [message, setMessage] = useState('');
-  const [responses, setResponses] = useState([]);
+const Chatbot = () => {
+  const [messages, setMessages] = useState([{ text: 'Hi! How can I help you today?', sender: 'bot' }]);
+  const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false); 
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
+  const handleSend = async () => {
+    if (input.trim() === '' || isSending) return;
+
+    const userMessage = { text: input, sender: 'user' };
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setInput(''); 
+    setIsSending(true);
+
     try {
-      const response = await axios.post('http://localhost:5000/api/chatbot', { message });
-      setResponses([...responses, { user: message, bot: response.data.response }]);
-      setMessage('');
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-3.5-turbo', 
+          messages: [{ role: 'user', content: input }],
+        },
+        {
+          headers: {
+            'Authorization': `Bearer `, 
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const botMessage = { text: response.data.choices[0].message.content, sender: 'bot' };
+      setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {
-      console.error('Error sending message to chatbot:', error);
+      if (error.response && error.response.status === 429) {
+        console.error('Rate limit exceeded. Please wait a moment before trying again.');
+        const errorMessage = { text: 'Rate limit exceeded. Please try again later.', sender: 'bot' };
+        setMessages((prevMessages) => [...prevMessages, errorMessage]);
+      } else {
+        console.error('An error occurred:', error);
+        const errorMessage = { text: 'An error occurred. Please try again later.', sender: 'bot' };
+        setMessages((prevMessages) => [...prevMessages, errorMessage]);
+      }
+    } finally {
+      setIsSending(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h2 className="text-2xl font-bold mb-4">Chat with AI</h2>
-      <div className="bg-white p-4 rounded shadow-md mb-6">
-        {responses.map((res, index) => (
-          <div key={index} className="mb-4">
-            <p><strong>You:</strong> {res.user}</p>
-            <p><strong>Bot:</strong> {res.bot}</p>
+    <div className="chatbot-container p-4 max-w-md mx-auto bg-white rounded-lg shadow-md">
+      <div className="chat-messages h-80 overflow-y-auto">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`message mb-2 p-2 rounded-lg ${
+              msg.sender === 'bot' ? 'bg-blue-100 text-left' : 'bg-green-100 text-right'
+            }`}
+          >
+            {msg.text}
           </div>
         ))}
       </div>
-      <form onSubmit={sendMessage} className="flex">
-        <input 
-          type="text" 
-          value={message} 
-          onChange={(e) => setMessage(e.target.value)} 
-          placeholder="Type your message" 
-          className="flex-grow p-2 border rounded-l-lg"
+      <div className="chat-input mt-4 flex">
+        <input
+          className="flex-grow p-2 border rounded-l-lg focus:outline-none"
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          disabled={isSending} 
         />
-        <button type="submit" className="bg-blue-500 text-white px-4 rounded-r-lg">
+        <button
+          className="p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-700"
+          onClick={handleSend}
+          disabled={isSending} 
+        >
           Send
         </button>
-      </form>
+      </div>
     </div>
   );
-}
+};
 
 export default Chatbot;
