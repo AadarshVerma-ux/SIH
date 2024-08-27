@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const socket = io('http://localhost:3001');
 
 function Chat() {
   const [message, setMessage] = useState('');
@@ -10,7 +10,7 @@ function Chat() {
   const sendMessage = (e) => {
     e.preventDefault();
     socket.emit('sendMessage', message);
-    setMessage('');
+    setMessage(''); 
   };
 
   useEffect(() => {
@@ -21,7 +21,7 @@ function Chat() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-200">
       <h2 className="text-2xl font-bold mb-4 text-gray-800">Chat with Friends</h2>
       <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-4">
         <div className="h-64 overflow-y-auto mb-4 bg-gray-50 p-2 rounded-lg">
