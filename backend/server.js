@@ -17,23 +17,35 @@ mongoose.connect('mongodb://localhost:27017/employee', {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
+
   EmployeeModel.findOne({ email })
     .then(user => {
       if (user) {
+        console.log("Stored hashed password:", user.password);
+
         bcrypt.compare(password, user.password)
           .then(isMatch => {
             if (isMatch) {
               res.json("Success");
             } else {
+              console.log("Password did not match");
               res.json("Incorrect password");
             }
+          })
+          .catch(err => {
+            console.error("Error during password comparison:", err);
+            res.status(500).json("Internal server error");
           });
       } else {
         res.json("No record exists");
       }
     })
-    .catch(err => res.status(500).json(err));
+    .catch(err => {
+      console.error("Error finding user:", err);
+      res.status(500).json("Internal server error");
+    });
 });
+
 
 app.post('/register', (req, res) => {
   const { name, email, password } = req.body;
