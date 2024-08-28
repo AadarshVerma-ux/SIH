@@ -21,7 +21,7 @@ app.post("/login", (req, res) => {
   EmployeeModel.findOne({ email })
     .then(user => {
       if (user) {
-        console.log("Stored hashed password:", user.password);
+        console.log("Stored hashed password:", user.password); // Log the stored hashed password
 
         bcrypt.compare(password, user.password)
           .then(isMatch => {
@@ -47,16 +47,20 @@ app.post("/login", (req, res) => {
 });
 
 
+
+
 app.post('/register', (req, res) => {
   const { name, email, password } = req.body;
   bcrypt.hash(password, 10)
     .then(hashedPassword => {
+      console.log("Hashed password:", hashedPassword); // Log the hashed password
       EmployeeModel.create({ name, email, password: hashedPassword })
         .then(employee => res.json("Success"))
         .catch(err => res.status(400).json(err));
     })
     .catch(err => res.status(500).json(err));
 });
+
 
 app.listen(3001, () => {
   console.log('Server is running on port 3001');
