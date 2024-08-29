@@ -23,20 +23,23 @@ const SignupLoginForm = ({ isSignup }) => {
       return;
     }
 
-    const url = formType ? 'http://localhost:3001/register' : 'http://localhost:3001/login';
+    const url = formType ? 'http://localhost:3001/auth/signup' : 'http://localhost:3001/auth/login';
     const payload = formType ? { name, email, password } : { email, password };
 
     axios.post(url, payload)
       .then(result => {
-        console.log(result.data);
-        if (result.data === "Success") {
+        const message = result.data.message || result.data;
+        console.log(message);
+
+        if (message === "User registered" || message === "Success") {
           navigate('/dashboard'); 
         } else {
-          alert(result.data);
+          alert(message);
         }
       })
       .catch(err => {
-        console.log(err);
+        console.log(err.response ? err.response.data : err.message);
+        alert("An error occurred: " + (err.response ? err.response.data : err.message));
       });
   };
 

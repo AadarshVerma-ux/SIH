@@ -978,10 +978,6 @@ video {
   transition-duration: 150ms;
 }
 
-.delay-200 {
-  transition-delay: 200ms;
-}
-
 .duration-300 {
   transition-duration: 300ms;
 }
